@@ -1,22 +1,27 @@
 
-const thisYear = new Date().getFullYear()
-const startTimeOfThisYear = new Date(`${thisYear}-01-01T00:00:00+00:00`).getTime()
-const endTimeOfThisYear = new Date(`${thisYear}-12-31T23:59:59+00:00`).getTime()
-const progressOfThisYear = (Date.now() - startTimeOfThisYear) / (endTimeOfThisYear - startTimeOfThisYear)
-const progressBarOfThisYear = generateProgressBar()
+name: Progress Bar CI
 
-function generateProgressBar() {
-    const progressBarCapacity = 30
-    const passedProgressBarIndex = parseInt(progressOfThisYear * progressBarCapacity)
-    const progressBar =
-      '█'.repeat(passedProgressBarIndex) +
-      '▁'.repeat(progressBarCapacity - passedProgressBarIndex)
-    return `{ ${progressBar} }`
-}
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'
 
-const readme = `\
-### Hi there 👋
-⏳ Year progress ${progressBarOfThisYear} ${(progressOfThisYear * 100).toFixed(2)} %
----
-⏰ Updated on ${new Date().toUTCString()}
----
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js
+      uses: actions/setup-node@v1
+      with:
+        node-version: '14.x'
+    - name: Update README.md
+      run: node index.js > README.md
+    - name: Commit change & Push
+      run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'chengyangkj+github-actions[bot]@users.noreply.github.com'
+          git commit -am "bot: update README.md automatically"
+          git push
